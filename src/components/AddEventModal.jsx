@@ -8,13 +8,23 @@ const AddEventModal = ({ isOpen, onClose, onEventAdded }) => {
   const [start, setStart] = useState(new Date());
   const [end, setEnd] = useState(new Date());
 
+  const renderTimeConstraints = () => {
+    // Adjust time constraints dynamically based on the current hour
+    return {
+      hours: {
+        min: 8,
+        max: 6,
+        step: 1,
+      },
+    };
+  };
+
   const onSubmit = (event) => {
     event.preventDefault();
-
     onEventAdded({
       title,
-      start: moment(start).toISOString(),
-      end: moment(end).toISOString(),
+      start: moment(start).toISOString().slice(0, -8) + "+00:00",
+      end: moment(end).toISOString().slice(0, -8) + "+00:00",
     });
     onClose();
   };
@@ -30,7 +40,13 @@ const AddEventModal = ({ isOpen, onClose, onEventAdded }) => {
         />
         <div>
           <label>Start Date</label>
-          <Datetime value={start} onChange={(date) => setStart(date)} />
+          <Datetime
+            value={start}
+            timeFormat="h:mm A"
+            defaultValue={moment().startOf("day").add(8, "hours")}
+            timeConstraints={() => renderTimeConstraints()}
+            onChange={(date) => setStart(date)}
+          />
         </div>
 
         <div>

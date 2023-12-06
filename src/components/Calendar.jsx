@@ -4,14 +4,16 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import AddEventModal from "./AddEventModal";
 import axios from "axios";
 import moment from "moment";
+import { message } from "antd";
 
 const Calendar = () => {
   const [modalOpen, setModelOpen] = useState(false);
-  const [events, setEvents] = useState([]);
+  const [eventsDisp, setEventsDisp] = useState([]);
   const calenderRef = useRef(null);
 
   const onEventAdded = (event) => {
     let calendarApi = calenderRef.current.getApi();
+    console.log(event);
     calendarApi.addEvent({
       start: moment(event.start).toDate(),
       end: moment(event.end).toDate(),
@@ -20,17 +22,20 @@ const Calendar = () => {
   };
 
   async function handleEventAdd(data) {
-    console.log("data", data.event);
-    await axios.post("/api/calendar/create-event", data.event);
+    try {
+      await axios.post("/api/calendar/create-event", data.event);
+    } catch (error) {
+      await message.error(error?.response?.data?.message);
+    }
   }
-
-  // async function handleDatesSet(data) {
-  //   const response = await axios.post(
-  //     "http://localhost:5000/api/calendar/get-events"
-  //   );
-  //   console.log(response);
-  //   setEvents(response);
-  // }
+  const handleDatesSet = async () => {
+    try {
+      const response = await axios.get("/api/calendar/get-events");
+      setEventsDisp(response.data.events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
 
   return (
     <section>
@@ -38,7 +43,7 @@ const Calendar = () => {
 
       <div style={{ position: "relative", zIndex: 0, marginTop: "10px" }}>
         <FullCalendar
-          height="90vh"
+          height="60vh"
           ref={calenderRef}
           plugins={[timeGridPlugin]}
           initialView="timeGridWeek"
@@ -46,9 +51,12 @@ const Calendar = () => {
           headerToolbar={false}
           allDaySlot={false}
           locale="fr"
-          events={events}
+          slotMinTime={"08:00:00"}
+          slotMaxTime={"19:00:00"}
+          events={eventsDisp}
           eventAdd={(event) => handleEventAdd(event)}
-          // datesSet={(date) => handleDatesSet(date)}
+          datesSet={(date) => handleDatesSet(date)}
+          hiddenDays={[0]}
         />
       </div>
 
